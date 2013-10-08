@@ -26,6 +26,7 @@
 #    Info.plist file that Packagemaker requires, but I use awk on the
 #    PACKAGE_VERSION to get these.  See inline comments.
 #
+USE_PKGBUILD=1
 include /usr/local/share/luggage/luggage.make
 
 
@@ -35,7 +36,7 @@ include /usr/local/share/luggage/luggage.make
 TITLE=MCollective_Installer_Full
 REVERSE_DOMAIN=com.puppetlabs
 PAYLOAD=\
-		unpack-mc-${MCFILE} \
+  	unpack-mc-${MCFILE} \
 		pack-mc-libexec \
 		pack-mc-binaries \
 		pack-mc-lib \
@@ -44,12 +45,13 @@ PAYLOAD=\
 		pack-mc-config-client \
 		pack-mc-launchd \
 		pack-mc-mcollectived \
-		pack-mc-preflight-all
+		pack-mc-preflight-all \
+		# pack-script-postinstall
 
 # Variable Declarations:  
 #    Any variable can be set from the command line by doing this:
 #    "make pkg PACKAGE_VERSION=1.2.1"
-PACKAGE_VERSION=1.2.1
+PACKAGE_VERSION=2.3.2
 PACKAGE_MAJOR_VERSION=`echo ${PACKAGE_VERSION} | awk -F '.' '{print $$1}'`
 PACKAGE_MINOR_VERSION=`echo ${PACKAGE_VERSION} | awk -F '.' '{print $$2$$3}'`
 PACKAGE_VERSION_CHECK=`echo ${PACKAGE_VERSION} | awk -F '.' '{print $$3}'`
@@ -102,7 +104,8 @@ ifeq (${TYPE},BASE)
 			pack-mc-launchd \
 			pack-mc-mcollectived \
 			pack-mc-lib \
-			pack-mc-preflight-base
+			pack-mc-preflight-base \
+			# pack-script-postinstall
 	TITLE=MCollective_Installer_Base
 endif
 
@@ -124,10 +127,14 @@ l_usr_libexec_mcollective: l_usr
 	@sudo chown -R root:wheel ${WORK_D}/usr/libexec/mcollective
 	@sudo chmod -R 755 ${WORK_D}/usr/libexec/mcollective
 
-l_usr_lib_ruby_site_ruby_1_8: l_usr
-	@sudo mkdir -p ${WORK_D}/usr/lib/ruby/site_ruby/1.8
-	@sudo chown -R root:wheel ${WORK_D}/usr/lib/ruby/site_ruby/1.8
-	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+# l_usr_lib_ruby_site_ruby_1_8: l_usr
+# 	@sudo mkdir -p ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+# 	@sudo chown -R root:wheel ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+# 	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+l_usr_lib_ruby_site_ruby_2_0_0: l_usr
+	@sudo mkdir -p ${WORK_D}/usr/lib/ruby/site_ruby/2.0.0
+	@sudo chown -R root:wheel ${WORK_D}/usr/lib/ruby/site_ruby/2.0.0
+	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/2.0.0
 
 unpack-mc-${MCFILE}:
 	curl ${MCURL} -o ${MCFILE}.tgz
@@ -140,19 +147,23 @@ pack-mc-libexec: l_usr_libexec_mcollective
 
 # This rule installs the MCollective client binaries to /usr/sbin
 pack-mc-binaries: l_usr_sbin
-	@sudo ${INSTALL} -m 755 ./${MCFILE}/mc-* ${WORK_D}/usr/sbin
-	if [ ${PACKAGE_VERSION_FULL} -gt 113 ]; then /usr/bin/sudo ${INSTALL} \
-  -m 755 ./${MCFILE}/mco ${WORK_D}/usr/sbin; fi
+	@sudo ${INSTALL} -m 755 ./${MCFILE}/bin/mc-* ${WORK_D}/usr/sbin
+	@sudo ${INSTALL} -m 755 ./${MCFILE}/bin/mco ${WORK_D}/usr/sbin
+	# if [ ${PACKAGE_VERSION_FULL} -gt 113 ]; then /usr/bin/sudo ${INSTALL} \
+  -m 755 ./${MCFILE}/bin/mco ${WORK_D}/usr/sbin; fi
 
 # This rule will install the mcollectived daemon file to /usr/sbin
 pack-mc-mcollectived: l_usr_sbin
-	@sudo ${INSTALL} -m 755 ./${MCFILE}/mcollectived.rb ${WORK_D}/usr/sbin/mcollectived
+	@sudo ${INSTALL} -m 755 ./${MCFILE}/bin/mcollectived ${WORK_D}/usr/sbin/mcollectived
 
 # This rule installs the MCollective Ruby Libraries to 
 # /usr/lib/ruby/site_ruby/1.8
-pack-mc-lib: l_usr_lib_ruby_site_ruby_1_8
-	@sudo ${CP} -R ./${MCFILE}/lib/* ${WORK_D}/usr/lib/ruby/site_ruby/1.8
-	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+# pack-mc-lib: l_usr_lib_ruby_site_ruby_1_8
+# 	@sudo ${CP} -R ./${MCFILE}/lib/* ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+# 	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/1.8
+pack-mc-lib: l_usr_lib_ruby_site_ruby_2_0_0
+	@sudo ${CP} -R ./${MCFILE}/lib/* ${WORK_D}/usr/lib/ruby/site_ruby/2.0.0
+	@sudo chmod -R 755 ${WORK_D}/usr/lib/ruby/site_ruby/2.0.0
 
 # This rule will install base configuration files to /etc/mcollective
 pack-mc-config: l_etc_mcollective

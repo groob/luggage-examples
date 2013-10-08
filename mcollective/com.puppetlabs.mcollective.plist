@@ -7,7 +7,7 @@
                 <key>PATH</key>
                 <string>/sbin:/usr/sbin:/bin:/usr/bin</string>
                 <key>RUBYLIB</key>
-                <string>/Library/Ruby/Site/1.8</string>
+                <string>/Library/Ruby/Site/2.0.0</string>
         </dict>
         <key>Label</key>
         <string>com.puppetlabs.mcollective</string>
